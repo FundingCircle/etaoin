@@ -2467,6 +2467,23 @@
   [host port]
   (format "http://%s:%s" host port))
 
+(defn- configure-host-port-url
+  [type opt]
+  (if (:url opt)
+    (let [url (java.net.URL. (:url opt))
+          host (.getHost url)
+          port (.getPort url)]
+      {:host host
+       :port port
+       :url url})
+    (let [host (or (:host opt) "127.0.0.1")
+          port (or (:port opt)
+                   (discover-port type host))
+          url (make-url host port)]
+      {:host host
+       :port port
+       :url (make-url host port)})))
+
 (defn create-driver
   "Creates a new driver instance.
 
@@ -2483,6 +2500,9 @@
 
   - `opt` is a map with additional options for a driver. The supported
   options are:
+  
+  -- `:url` if url is provided, then `:host` and `:port` are extracted from
+  it. Otherwise, `:url` is derived from `:host` and `:port`.
 
   -- `:host` is a string with either IP or hostname. Use it if the
   server is run not locally but somethere in your network.
@@ -2496,10 +2516,7 @@
   if not passed."
   [type & [opt]] ;; todo move port and host to create-driver
   (let [driver (atom {})
-        host (or (:host opt) "127.0.0.1")
-        port (or (:port opt)
-                 (discover-port type host))
-        url (make-url host port)
+        {:keys [host port url]} (configure-host-port-url type opt)
         locator (or (:locator opt) default-locator)]
     (swap! driver assoc
            :type type

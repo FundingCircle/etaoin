@@ -72,18 +72,21 @@
   [driver method path-args payload]
   (let [host (:host @driver)
         port (:port @driver)
+        url (:url @driver)
         path (get-url-path path-args)
-        url (format "http://%s:%s/%s" host port path)
+        url (format "%s/%s" url path)
+        ;; url (format "http://%s:%s/%s" host port path)
         params (merge default-api-params
                       {:url url
                        :method method
                        :form-params (-> payload (or {}))
                        :throw-exceptions false})
 
-        _ (log/debugf "%s %s:%s %6s %s %s"
+        _ (log/debugf "%s %s:%s (%s) %6s %s %s"
                       (-> @driver :type name)
                       (-> @driver :host)
                       (-> @driver :port)
+                      (-> @driver :url)
                       (-> method name str/upper-case)
                       path
                       (-> payload (or "")))
